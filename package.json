@@ -9,7 +9,8 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "build": "tsc",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "docs": "typedoc"
   },
   "keywords": [
     "kambun",
@@ -23,6 +24,7 @@
     "@types/node": "^20.10.0",
     "@vitest/coverage-v8": "^1.0.0",
     "tsx": "^4.7.0",
+    "typedoc": "^0.28.14",
     "typescript": "^5.3.3",
     "vitest": "^1.0.0"
   }

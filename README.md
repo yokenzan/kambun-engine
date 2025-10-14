@@ -34,6 +34,16 @@ npm run test:coverage
 npm run build
 ```
 
+## ドキュメント生成
+
+TypeDocを使用してAPIドキュメントを生成できます：
+
+```bash
+npm run docs
+```
+
+生成されたドキュメントは `docs/` ディレクトリに出力され、ブラウザで閲覧できます。
+
 ## アーキテクチャ
 
 ### 2パスアルゴリズム
