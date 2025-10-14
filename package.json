@@ -1,0 +1,29 @@
+{
+  "name": "typescript-kambun",
+  "version": "0.1.0",
+  "description": "Kambun (Classical Chinese) text converter with 2-pass algorithm",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "build": "tsc",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": [
+    "kambun",
+    "classical-chinese",
+    "kunten",
+    "kakikudashi"
+  ],
+  "author": "yokenzan",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.0"
+  }
+}
