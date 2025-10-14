@@ -76,11 +76,11 @@ src/
 ## 実装ステータス
 
 - [x] Phase 0: プロジェクトセットアップ
-- [ ] Phase 1: ドメインモデル
-- [ ] Phase 2: 基本テストケース
-- [ ] Phase 3: パーサー実装
-- [ ] Phase 4: Pass 1実装
-- [ ] Phase 5: Pass 2実装
-- [ ] Phase 6: 統合
-- [ ] Phase 7: 複合訓点
-- [ ] Phase 8: 再読文字
+- [x] Phase 1: ドメインモデル
+- [x] Phase 2: 基本テストケース
+- [x] Phase 3: パーサー実装
+- [x] Phase 4: Pass 1実装（依存関係グラフ + トポロジカルソート）
+- [x] Phase 5: Pass 2実装（文字列生成）
+- [x] Phase 6: 統合（KakikudashiConvertor）
+- [x] Phase 7: 複合訓点（一レ点、上レ点など）
+- [x] Phase 8: 再読文字（未、将、宜など）
