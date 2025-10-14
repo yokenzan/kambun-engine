@@ -73,6 +73,10 @@ src/
     └── KakikudashiConvertor.ts
 ```
 
+### アルゴリズム詳細
+
+読み順解決アルゴリズム（依存関係グラフ + トポロジカルソート）の詳しい解説は [ALGORITHM.md](./ALGORITHM.md) を参照してください。
+
 ## 実装ステータス
 
 - [x] Phase 0: プロジェクトセットアップ

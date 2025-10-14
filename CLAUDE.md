@@ -70,6 +70,8 @@ convert(words: Word[]): string {
 }
 ```
 
+**For detailed explanation of the dependency graph and topological sort algorithm, see [ALGORITHM.md](./ALGORITHM.md).**
+
 ## Key Domain Concepts
 
 **Kunten (訓点)**: Reading marks indicating Japanese reading order in Classical Chinese:
