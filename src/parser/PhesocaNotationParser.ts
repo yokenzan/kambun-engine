@@ -15,12 +15,15 @@ import { isKatakana } from '../utils/string.js';
  * - 助字: ~文字
  * - 置き字: _文字
  * - 再読文字: *文字
+ * - 割注: {注釈}
  */
 export class PhesocaNotationParser {
   private static readonly KUNTEN_TAG_OPEN = '[';
   private static readonly KUNTEN_TAG_CLOSE = ']';
   private static readonly FURIGANA_TAG_OPEN = '(';
   private static readonly FURIGANA_TAG_CLOSE = ')';
+  private static readonly WARICHU_TAG_OPEN = '{';
+  private static readonly WARICHU_TAG_CLOSE = '}';
   // 複合文字タグ: ASCII apostrophe を使用（状態で開き/閉じを判定）
   private static readonly COMPOUND_CHARACTER_TAG = "'";
   private static readonly JOJI_PREFIX = '~';
@@ -59,6 +62,15 @@ export class PhesocaNotationParser {
 
         case PhesocaNotationParser.FURIGANA_TAG_CLOSE:
           context.whileFurigana = false;
+          break;
+
+        case PhesocaNotationParser.WARICHU_TAG_OPEN:
+          context.whileWarichu = true;
+          context.currentWord.hasWarichu = true;
+          break;
+
+        case PhesocaNotationParser.WARICHU_TAG_CLOSE:
+          context.whileWarichu = false;
           break;
 
         case PhesocaNotationParser.KUNTEN_TAG_OPEN:
@@ -103,13 +115,17 @@ export class PhesocaNotationParser {
       context.currentWord.kanji.push(char);
     } else if (context.whileFurigana) {
       context.currentWord.furigana.push(char);
+    } else if (context.whileWarichu) {
+      context.currentWord.warichu.push(char);
     } else if (context.whileKunten) {
       context.currentWord.kunten.push(char);
     } else if (isKatakana(char)) {
       context.currentWord.okurigana.push(char);
     } else {
       // 新しい文字の開始
-      parsedWords.push(context.currentWord);
+      if (context.currentWord.kanji.length > 0) {
+        parsedWords.push(context.currentWord);
+      }
       context.currentWord = new WordParameter();
       context.currentWord.kanji.push(char);
 
@@ -142,11 +158,14 @@ export class PhesocaNotationParser {
         const furigana = param.furigana.length > 0
           ? param.furigana.join('')
           : undefined;
+        const warichu = param.hasWarichu
+          ? param.warichu.join('')
+          : undefined;
 
         // 複合文字の場合
         if (param.kanji.length > 1) {
           const characters = param.kanji.map(k => new Character(k));
-          return new CompoundCharacter(characters, kunten, okurigana, furigana);
+          return new CompoundCharacter(characters, kunten, okurigana, furigana, warichu);
         }
 
         // 単一文字の場合
@@ -158,7 +177,8 @@ export class PhesocaNotationParser {
           param.isJoji,
           param.isOkiji,
           param.isSaidoku,
-          param.saidokuReading
+          param.saidokuReading,
+          warichu
         );
       });
   }
@@ -167,6 +187,7 @@ export class PhesocaNotationParser {
 class ParseContext {
   whileKunten = false;
   whileFurigana = false;
+  whileWarichu = false;
   whileCompoundCharacter = false;
   treatAsJoji = false;
   treatAsOkiji = false;
@@ -179,6 +200,8 @@ class WordParameter {
   kunten: string[] = [];
   okurigana: string[] = [];
   furigana: string[] = [];
+  warichu: string[] = [];
+  hasWarichu = false; // 割注タグが開かれたかどうか
   isJoji = false;
   isOkiji = false;
   isSaidoku = false;

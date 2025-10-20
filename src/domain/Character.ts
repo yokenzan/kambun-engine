@@ -19,7 +19,9 @@ export class Character implements Word {
     /** 再読文字であるか */
     public readonly isSaidoku: boolean = false,
     /** 再読文字の1回目の読み（否定形など） */
-    public readonly saidokuReading?: string
+    public readonly saidokuReading?: string,
+    /** 割注（注釈・補足説明） */
+    public readonly warichu?: string
   ) {
     this.length = kanji === "\n" ? 0 : kanji.length;
   }
@@ -43,7 +45,9 @@ export class CompoundCharacter implements Word {
     public readonly characters: Word[],
     public readonly kunten?: KuntenInterface,
     public readonly okurigana?: string,
-    public readonly furigana?: string
+    public readonly furigana?: string,
+    /** 割注（注釈・補足説明） */
+    public readonly warichu?: string
   ) {
     this.length = characters.reduce((sum, c) => sum + c.length, 0);
     this.kanji = characters.map(c => c.kanji).join("");

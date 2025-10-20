@@ -15,9 +15,9 @@ export class TextGenerator {
   }
 
   private wordToString(word: Word, phase: ReadingPhase): string {
-    // 置き字はスキップ
+    // 置き字はスキップ（ただし割注がある場合は表示）
     if (word instanceof Character && word.isOkiji) {
-      return '';
+      return word.warichu !== undefined ? `（${word.warichu}）` : '';
     }
 
     // 再読文字の処理
@@ -36,46 +36,64 @@ export class TextGenerator {
   }
 
   private normalReading(word: Word): string {
+    let result = '';
+    
     if (word instanceof CompoundCharacter) {
-      return word.kanji + this.convertOkurigana(word.okurigana);
-    }
-
-    if (word instanceof Character) {
+      result = word.kanji + this.convertOkurigana(word.okurigana);
+    } else if (word instanceof Character) {
       // 助字・助動詞は振り仮名で読む
       if (word.isJojiOrJodoushi) {
         const reading = word.furigana ? toHiragana(word.furigana) : word.kanji;
         const okurigana = this.convertOkurigana(word.okurigana);
-        return reading + okurigana;
+        result = reading + okurigana;
+      } else {
+        // 通常の文字
+        result = word.kanji + this.convertOkurigana(word.okurigana);
       }
-
-      // 通常の文字
-      return word.kanji + this.convertOkurigana(word.okurigana);
+    } else {
+      result = word.kanji;
     }
 
-    return word.kanji;
+    // 割注がある場合は追加（空文字列も含む）
+    if (word.warichu !== undefined) {
+      result += `（${word.warichu}）`;
+    }
+
+    return result;
   }
 
   private saidokuFirstReading(word: Character): string {
     // 再読文字の1回目の読み（例：「未」→「ず」）
+    let result = '';
     if (word.saidokuReading) {
-      return toHiragana(word.saidokuReading);
+      result = toHiragana(word.saidokuReading);
+    } else if (word.furigana) {
+      result = toHiragana(word.furigana) + this.convertOkurigana(word.okurigana);
     }
 
-    // saidokuReadingがない場合は振り仮名を使用
-    if (word.furigana) {
-      return toHiragana(word.furigana) + this.convertOkurigana(word.okurigana);
+    // 割注がある場合は追加
+    if (word.warichu !== undefined) {
+      result += `（${word.warichu}）`;
     }
 
-    return '';
+    return result;
   }
 
   private saidokuSecondReading(word: Character): string {
     // 再読文字の2回目の読み（例：「未」→「いまだ」）
+    let result = '';
     if (word.furigana) {
-      return toHiragana(word.furigana);
+      result = toHiragana(word.furigana);
+    } else {
+      result = word.kanji + this.convertOkurigana(word.okurigana);
     }
 
-    return word.kanji + this.convertOkurigana(word.okurigana);
+    // 割注がある場合は追加（2回目のみ）
+    if (word.warichu !== undefined) {
+      result += `（${word.warichu}）`;
+    }
+
+    return result;
   }
 
   private convertOkurigana(okurigana?: string): string {
