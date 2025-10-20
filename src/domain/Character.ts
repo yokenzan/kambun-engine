@@ -1,5 +1,5 @@
-import { Word } from './Word.js';
-import { KuntenInterface } from './Kunten.js';
+import { Word } from "./Word.js";
+import { KuntenInterface } from "./Kunten.js";
 
 /**
  * 単一の文字
@@ -19,7 +19,7 @@ export class Character implements Word {
     /** 再読文字であるか */
     public readonly isSaidoku: boolean = false,
     /** 再読文字の1回目の読み（否定形など） */
-    public readonly saidokuReading?: string
+    public readonly saidokuReading?: string,
   ) {
     this.length = kanji === "\n" ? 0 : kanji.length;
   }
@@ -43,9 +43,9 @@ export class CompoundCharacter implements Word {
     public readonly characters: Word[],
     public readonly kunten?: KuntenInterface,
     public readonly okurigana?: string,
-    public readonly furigana?: string
+    public readonly furigana?: string,
   ) {
     this.length = characters.reduce((sum, c) => sum + c.length, 0);
-    this.kanji = characters.map(c => c.kanji).join("");
+    this.kanji = characters.map((c) => c.kanji).join("");
   }
 }

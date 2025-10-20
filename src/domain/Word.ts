@@ -1,4 +1,4 @@
-import { KuntenInterface } from './Kunten.js';
+import { KuntenInterface } from "./Kunten.js";
 
 /**
  * 単語のインターフェース

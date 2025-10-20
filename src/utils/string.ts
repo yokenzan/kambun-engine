@@ -11,14 +11,17 @@ const KATAKANA_CODE_RANGE = { start: 0x30a0, end: 0x30ff };
  */
 export function toHiragana(str: string): string {
   return Array.from(str)
-    .map(char => {
+    .map((char) => {
       const code = char.charCodeAt(0);
-      if (code >= KATAKANA_CODE_RANGE.start && code <= KATAKANA_CODE_RANGE.end) {
+      if (
+        code >= KATAKANA_CODE_RANGE.start &&
+        code <= KATAKANA_CODE_RANGE.end
+      ) {
         return String.fromCharCode(code - DIFF_BETWEEN_HIRAGANA_AND_KATAKANA);
       }
       return char;
     })
-    .join('');
+    .join("");
 }
 
 /**
@@ -26,14 +29,17 @@ export function toHiragana(str: string): string {
  */
 export function toKatakana(str: string): string {
   return Array.from(str)
-    .map(char => {
+    .map((char) => {
       const code = char.charCodeAt(0);
-      if (code >= HIRAGANA_CODE_RANGE.start && code <= HIRAGANA_CODE_RANGE.end) {
+      if (
+        code >= HIRAGANA_CODE_RANGE.start &&
+        code <= HIRAGANA_CODE_RANGE.end
+      ) {
         return String.fromCharCode(code + DIFF_BETWEEN_HIRAGANA_AND_KATAKANA);
       }
       return char;
     })
-    .join('');
+    .join("");
 }
 
 /**

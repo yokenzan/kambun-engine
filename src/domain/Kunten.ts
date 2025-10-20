@@ -1,4 +1,4 @@
-import { JumpStrategy } from './types.js';
+import { JumpStrategy } from "./types.js";
 
 /**
  * 訓点のインターフェース
@@ -14,7 +14,7 @@ export class Kunten implements KuntenInterface {
   constructor(
     public readonly value: string,
     public readonly isStartingPoint: boolean,
-    public readonly jumpStrategy: JumpStrategy
+    public readonly jumpStrategy: JumpStrategy,
   ) {}
 
   toString(): string {
@@ -93,7 +93,7 @@ export class CombinedKunten implements KuntenInterface {
   }
 
   toString(): string {
-    return this.kuntens.map(k => k.value).join("");
+    return this.kuntens.map((k) => k.value).join("");
   }
 
   // 複合訓点の定義
@@ -102,12 +102,13 @@ export class CombinedKunten implements KuntenInterface {
   static readonly KOU_RE = new CombinedKunten([Kunten.KOU, Kunten.RE]);
   static readonly TEN_RE = new CombinedKunten([Kunten.TEN, Kunten.RE]);
 
-  private static readonly COMBINED_KUNTEN_MAP: Map<string, CombinedKunten> = new Map([
-    ["一レ", CombinedKunten.ICHI_RE],
-    ["上レ", CombinedKunten.JOU_RE],
-    ["甲レ", CombinedKunten.KOU_RE],
-    ["天レ", CombinedKunten.TEN_RE],
-  ]);
+  private static readonly COMBINED_KUNTEN_MAP: Map<string, CombinedKunten> =
+    new Map([
+      ["一レ", CombinedKunten.ICHI_RE],
+      ["上レ", CombinedKunten.JOU_RE],
+      ["甲レ", CombinedKunten.KOU_RE],
+      ["天レ", CombinedKunten.TEN_RE],
+    ]);
 
   /**
    * 文字列から複合訓点を取得
