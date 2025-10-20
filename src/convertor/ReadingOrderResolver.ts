@@ -1,7 +1,7 @@
-import { Word } from '../domain/Word.js';
-import { Character } from '../domain/Character.js';
-import { Kunten, CombinedKunten, KuntenInterface } from '../domain/Kunten.js';
-import { JumpStrategy, ReadingUnit, ReadingPhase } from '../domain/types.js';
+import { Word } from "../domain/Word.js";
+import { Character } from "../domain/Character.js";
+import { Kunten, CombinedKunten, KuntenInterface } from "../domain/Kunten.js";
+import { JumpStrategy, ReadingUnit, ReadingPhase } from "../domain/types.js";
 
 /**
  * Pass 1: 読み順解決
@@ -91,12 +91,12 @@ export class ReadingOrderResolver {
     startIndex: number,
     startKunten: Kunten,
     words: Word[],
-    adj: Set<number>[]
+    adj: Set<number>[],
   ): void {
     const endPoints = this.findMatchingEndPoints(
       startIndex,
       words,
-      startKunten.jumpStrategy
+      startKunten.jumpStrategy,
     );
 
     if (endPoints.length === 0) return;
@@ -132,7 +132,7 @@ export class ReadingOrderResolver {
     currentIndex: number,
     combinedKunten: CombinedKunten,
     words: Word[],
-    adj: Set<number>[]
+    adj: Set<number>[],
   ): void {
     const hasRe = combinedKunten.secondaryKunten === Kunten.RE;
     const isStartingPoint = combinedKunten.primaryKunten.isStartingPoint;
@@ -143,7 +143,7 @@ export class ReadingOrderResolver {
         const endPoints = this.findMatchingEndPoints(
           currentIndex,
           words,
-          combinedKunten.primaryKunten.jumpStrategy
+          combinedKunten.primaryKunten.jumpStrategy,
         );
 
         if (endPoints.length > 0) {
@@ -168,10 +168,7 @@ export class ReadingOrderResolver {
    * ステップ2: トポロジカルソート
    * Kahn's アルゴリズムによる実装
    */
-  private topologicalSort(
-    words: Word[],
-    adj: Set<number>[]
-  ): number[] {
+  private topologicalSort(words: Word[], adj: Set<number>[]): number[] {
     const n = words.length;
 
     // 入次数を計算
@@ -209,7 +206,7 @@ export class ReadingOrderResolver {
 
     // 循環依存のチェック
     if (result.length !== n) {
-      console.warn('Cyclic dependency detected or incomplete sort');
+      console.warn("Cyclic dependency detected or incomplete sort");
       // 処理されていないノードを追加
       for (let i = 0; i < n; i++) {
         if (!result.includes(i)) {
@@ -226,24 +223,25 @@ export class ReadingOrderResolver {
    */
   private convertToReadingUnits(
     words: Word[],
-    readingOrder: number[]
+    readingOrder: number[],
   ): ReadingUnit[] {
     const units: ReadingUnit[] = [];
+    const saidokuFirstReadings: ReadingUnit[] = [];
 
     for (const index of readingOrder) {
       const word = words[index];
 
       // 再読文字の場合
       if (word instanceof Character && word.isSaidoku) {
-        // 1回目の読み
-        units.push({
-          index,
-          phase: ReadingPhase.SAIDOKU_FIRST,
-        });
-        // 2回目の読み（後で追加される）
+        // 2回目の読みを通常位置に配置
         units.push({
           index,
           phase: ReadingPhase.SAIDOKU_SECOND,
+        });
+        // 1回目の読みは後で追加するため保持
+        saidokuFirstReadings.push({
+          index,
+          phase: ReadingPhase.SAIDOKU_FIRST,
         });
       } else {
         // 通常の読み
@@ -254,7 +252,64 @@ export class ReadingOrderResolver {
       }
     }
 
+    // 再読文字の2回目の読みをスコープの先頭に移動
+    // スコープは再読文字から見て「後に回す」依存の対象語群
+    if (saidokuFirstReadings.length > 0) {
+      this.moveSaidokuSecondToScopeStart(words, units);
+    }
+
+    // 句点の前に再読1回目の読みを挿入
+    const kutenIndex = units.findIndex((unit) => {
+      const word = words[unit.index];
+      return word instanceof Character && word.kanji === "。";
+    });
+
+    if (kutenIndex !== -1) {
+      // 句点の前に挿入
+      units.splice(kutenIndex, 0, ...saidokuFirstReadings);
+    } else {
+      // 句点がない場合は末尾に追加
+      units.push(...saidokuFirstReadings);
+    }
+
     return units;
+  }
+
+  /**
+   * 再読文字の2回目の読みをスコープの先頭に移動
+   */
+  private moveSaidokuSecondToScopeStart(
+    words: Word[],
+    units: ReadingUnit[],
+  ): void {
+    // 再読文字の2回目の読みを特定
+    const saidokuSecondUnits = units.filter(
+      (unit) => unit.phase === ReadingPhase.SAIDOKU_SECOND,
+    );
+
+    for (const saidokuUnit of saidokuSecondUnits) {
+      const saidokuWord = words[saidokuUnit.index];
+      if (!(saidokuWord instanceof Character) || !saidokuWord.isSaidoku)
+        continue;
+
+      // スコープの開始位置を特定
+      // 簡便化のため、トポロジカル順でsaidokuUnitより前に読まれる連続区間の先頭とする
+      const saidokuIndex = units.indexOf(saidokuUnit);
+      let scopeStart = 0;
+
+      // 句読点で区切られた連続区間の先頭を探す
+      for (let i = saidokuIndex - 1; i >= 0; i--) {
+        const word = words[units[i].index];
+        if (word instanceof Character && this.isPunctuation(word)) {
+          scopeStart = i + 1;
+          break;
+        }
+      }
+
+      // 再読文字の2回目の読みをスコープの先頭に移動
+      units.splice(saidokuIndex, 1);
+      units.splice(scopeStart, 0, saidokuUnit);
+    }
   }
 
   /**
@@ -278,7 +333,7 @@ export class ReadingOrderResolver {
     if (!(word instanceof Character)) return false;
 
     // 句読点文字（、。）やその他の区切り文字
-    const punctuationMarks = ['、', '。', '，', '．', '；', '：'];
+    const punctuationMarks = ["、", "。", "，", "．", "；", "："];
     return punctuationMarks.includes(word.kanji);
   }
 
@@ -291,7 +346,7 @@ export class ReadingOrderResolver {
   private findMatchingEndPoints(
     startIndex: number,
     words: Word[],
-    targetStrategy: JumpStrategy
+    targetStrategy: JumpStrategy,
   ): number[] {
     const endPoints: number[] = [];
 
