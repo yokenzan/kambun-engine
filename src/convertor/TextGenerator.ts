@@ -1,7 +1,7 @@
-import { Word } from '../domain/Word.js';
-import { Character, CompoundCharacter } from '../domain/Character.js';
-import { ReadingUnit, ReadingPhase } from '../domain/types.js';
-import { toHiragana } from '../utils/string.js';
+import { Word } from "../domain/Word.js";
+import { Character, CompoundCharacter } from "../domain/Character.js";
+import { ReadingUnit, ReadingPhase } from "../domain/types.js";
+import { toHiragana } from "../utils/string.js";
 
 /**
  * Pass 2: 文字列生成
@@ -11,13 +11,13 @@ export class TextGenerator {
   generate(words: Word[], readingOrder: ReadingUnit[]): string {
     return readingOrder
       .map((unit) => this.wordToString(words[unit.index], unit.phase))
-      .join('');
+      .join("");
   }
 
   private wordToString(word: Word, phase: ReadingPhase): string {
     // 置き字はスキップ
     if (word instanceof Character && word.isOkiji) {
-      return '';
+      return "";
     }
 
     // 再読文字の処理
@@ -61,24 +61,16 @@ export class TextGenerator {
       return toHiragana(word.saidokuReading);
     }
 
-    // saidokuReadingがない場合は振り仮名を使用
-    if (word.furigana) {
-      return toHiragana(word.furigana) + this.convertOkurigana(word.okurigana);
-    }
-
-    return '';
+    return "";
   }
 
   private saidokuSecondReading(word: Character): string {
-    // 再読文字の2回目の読み（例：「未」→「いまだ」）
-    if (word.furigana) {
-      return toHiragana(word.furigana);
-    }
-
+    // 再読文字の2回目の読み（例：「未」→「未だ」、「将」→「将に」）
+    // 漢字 + 送り仮名を出力
     return word.kanji + this.convertOkurigana(word.okurigana);
   }
 
   private convertOkurigana(okurigana?: string): string {
-    return okurigana ? toHiragana(okurigana) : '';
+    return okurigana ? toHiragana(okurigana) : "";
   }
 }
