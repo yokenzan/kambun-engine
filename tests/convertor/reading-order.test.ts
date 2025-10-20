@@ -41,10 +41,12 @@ describe("ReadingOrderResolver", () => {
 
     const order = resolver.resolve(input);
 
+    // レ点が連続する場合は、一番下まで行ってから順に上に返る
+    // 不[レ]見[レ]山ヲ → 山ヲ→見→不
     expect(order).toEqual([
+      { index: 2, phase: ReadingPhase.NORMAL }, // 山ヲ
       { index: 1, phase: ReadingPhase.NORMAL }, // 見
       { index: 0, phase: ReadingPhase.NORMAL }, // 不
-      { index: 2, phase: ReadingPhase.NORMAL }, // 山ヲ
     ]);
   });
 

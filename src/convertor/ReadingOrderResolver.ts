@@ -84,8 +84,12 @@ export class ReadingOrderResolver {
    * 起点（一、上、甲など）の依存関係を追加
    *
    * ルール: 起点を先に読み、終点を後に読む
-   * 例: 施[二]人[一] → 人（起点）を先に読み、施（終点）を後に読む
-   * つまり、起点 -> 終点 の依存関係（Geminiのアドバイスによる修正）
+   * 例: 登山[二]水[一] → 水[一](起点) → 山[二](終点) → 登(その他)
+   *
+   * 依存関係:
+   * 1. 起点 → 直近の終点（例: 水 → 山）
+   * 2. 終点間の順序（例: 山[二] → 川[三]）
+   * 3. 最後の終点 → 終点より前の文字（例: 山 → 登）
    */
   private addStartingPointDependencies(
     startIndex: number,
@@ -101,21 +105,35 @@ export class ReadingOrderResolver {
 
     if (endPoints.length === 0) return;
 
-    const lastEndPoint = endPoints[endPoints.length - 1];
+    // endPoints は index 昇順（テキストの前方が先）
+    // 例: [0, 1] = [山[三], 川[二]]
+    // 読み順: 起点[一] → 川[二] → 山[三]
 
-    // 起点 -> 最後の終点（正しい依存方向）
-    adj[startIndex].add(lastEndPoint);
+    // 1. 起点 → 直近の終点（index が最大の終点）
+    const nearestEndPoint = endPoints[endPoints.length - 1];
+    adj[startIndex].add(nearestEndPoint);
 
-    // 複数の終点がある場合、順序を保つ
-    // [一] -> [二] -> [三] の順
+    // 2. 終点間の順序を保つ: 後方の終点 → 前方の終点
+    // 例: 川[二](index 1) → 山[三](index 0)
     for (let i = 0; i < endPoints.length - 1; i++) {
-      adj[endPoints[i]].add(endPoints[i + 1]);
+      adj[endPoints[i + 1]].add(endPoints[i]);
     }
 
-    // 起点の次の文字から最初の終点の前まで -> 最初の終点
-    if (endPoints.length > 0) {
-      for (let j = startIndex + 1; j < endPoints[0]; j++) {
-        adj[j].add(endPoints[0]);
+    // 3. 読み順で最後の終点 → 終点より前の文字（終点と起点以外、句読点を越えない）
+    // 例: 山[三] → 登（ただし句読点で区切られた同じスコープ内のみ）
+    const lastEndPointInReadingOrder = endPoints[0]; // index が最小 = 読み順で最後
+
+    // 終点から逆順に探索し、句読点で打ち切る
+    for (let i = lastEndPointInReadingOrder - 1; i >= 0; i--) {
+      // 句読点が見つかったら打ち切り（スコープを越えない）
+      const word = words[i];
+      if (word instanceof Character && this.isPunctuation(word)) {
+        break;
+      }
+
+      // 起点でも終点でもない文字を最後の終点の後に読む
+      if (i !== startIndex && !endPoints.includes(i)) {
+        adj[lastEndPointInReadingOrder].add(i);
       }
     }
   }
@@ -123,10 +141,8 @@ export class ReadingOrderResolver {
   /**
    * 複合訓点（一レ点など）の依存関係を追加
    *
-   * 一レ点の場合:
-   * - 次の文字を読む（レ点の効果）
-   * - 終点を読む（一点の効果）
-   * - その後、起点を読む
+   * 複合訓点は起点+レ点の組み合わせ（例: 一レ、上レ）
+   * 読み順: 次の文字 → 終点（もしあれば） → 起点
    */
   private addCombinedKuntenDependencies(
     currentIndex: number,
@@ -138,27 +154,58 @@ export class ReadingOrderResolver {
     const isStartingPoint = combinedKunten.primaryKunten.isStartingPoint;
 
     if (hasRe && isStartingPoint) {
-      // 一レ点の場合: 次の文字 -> 終点 -> 間の文字 -> 起点
-      if (currentIndex + 1 < words.length) {
-        const endPoints = this.findMatchingEndPoints(
-          currentIndex,
-          words,
-          combinedKunten.primaryKunten.jumpStrategy,
-        );
+      if (currentIndex + 1 >= words.length) return;
 
-        if (endPoints.length > 0) {
-          const lastEndPoint = endPoints[endPoints.length - 1];
+      // 終点を前後両方から探す（上中下点は後方にある場合がある）
+      const endPointsAll = this.findMatchingEndPointsAll(
+        currentIndex,
+        words,
+        combinedKunten.primaryKunten.jumpStrategy,
+      );
 
-          // 次の文字 -> 終点
-          adj[currentIndex + 1].add(lastEndPoint);
+      if (endPointsAll.length > 0) {
+        // 終点がある場合: 次の文字 → 終点 → 起点
+        const nearestEndPoint = endPointsAll[endPointsAll.length - 1];
 
-          // 終点 -> 起点
-          adj[lastEndPoint].add(currentIndex);
+        // 次の文字 → 直近の終点（自己ループを避ける）
+        if (currentIndex + 1 !== nearestEndPoint) {
+          adj[currentIndex + 1].add(nearestEndPoint);
+        }
 
-          // 間の文字 -> 終点
-          for (let j = currentIndex + 2; j < lastEndPoint; j++) {
-            adj[j].add(lastEndPoint);
+        // 終点間の順序
+        for (let i = 0; i < endPointsAll.length - 1; i++) {
+          adj[endPointsAll[i + 1]].add(endPointsAll[i]);
+        }
+
+        // 最後の終点 → 起点
+        const lastEndPointInReadingOrder = endPointsAll[0];
+        adj[lastEndPointInReadingOrder].add(currentIndex);
+
+        // 最後の終点 → 終点より前の文字（起点と終点以外、句読点を越えない）
+        for (let i = lastEndPointInReadingOrder - 1; i >= 0; i--) {
+          // 句読点が見つかったら打ち切り
+          const word = words[i];
+          if (word instanceof Character && this.isPunctuation(word)) {
+            break;
           }
+
+          if (i !== currentIndex && !endPointsAll.includes(i)) {
+            adj[lastEndPointInReadingOrder].add(i);
+          }
+        }
+      } else {
+        // 終点がない場合: 次の文字 → 起点より後の全ての文字 → 起点
+        // 例: 不[一レ]可勝 → 可 → 勝 → 不
+
+        // 次の文字から起点より後の全ての文字への依存
+        for (let i = currentIndex + 2; i < words.length; i++) {
+          adj[currentIndex + 1].add(i);
+        }
+
+        // 起点より後の最後の文字 → 起点
+        if (currentIndex + 1 < words.length) {
+          const lastIndex = words.length - 1;
+          adj[lastIndex].add(currentIndex);
         }
       }
     }
@@ -364,6 +411,39 @@ export class ReadingOrderResolver {
 
     // 逆順で見つけたので、元の順序（小さいindexが先）に戻す
     endPoints.reverse();
+
+    return endPoints;
+  }
+
+  /**
+   * 指定したjumpStrategyに一致する終点を前後両方から探す
+   *
+   * 上中下点などは終点が起点より後に来ることがある
+   * 例: 有[上レ]リ客[下] → 客が終点、有が起点
+   */
+  private findMatchingEndPointsAll(
+    startIndex: number,
+    words: Word[],
+    targetStrategy: JumpStrategy,
+  ): number[] {
+    const endPoints: number[] = [];
+
+    // 前後両方を探す
+    for (let i = 0; i < words.length; i++) {
+      if (i === startIndex) continue; // 起点自身は除外
+
+      const kunten = words[i].kunten;
+      if (
+        kunten instanceof Kunten &&
+        kunten.jumpStrategy === targetStrategy &&
+        !kunten.isStartingPoint
+      ) {
+        endPoints.push(i);
+      }
+    }
+
+    // index 昇順にソート（前方が先）
+    endPoints.sort((a, b) => a - b);
 
     return endPoints;
   }
