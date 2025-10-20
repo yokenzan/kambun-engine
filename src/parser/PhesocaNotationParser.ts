@@ -1,7 +1,7 @@
-import { Word } from '../domain/Word.js';
-import { Character, CompoundCharacter } from '../domain/Character.js';
-import { kuntenFromString } from '../domain/Kunten.js';
-import { isKatakana } from '../utils/string.js';
+import { Word } from "../domain/Word.js";
+import { Character, CompoundCharacter } from "../domain/Character.js";
+import { kuntenFromString } from "../domain/Kunten.js";
+import { isKatakana } from "../utils/string.js";
 
 /**
  * Phesoca記法のパーサー
@@ -17,15 +17,20 @@ import { isKatakana } from '../utils/string.js';
  * - 再読文字: *文字
  */
 export class PhesocaNotationParser {
-  private static readonly KUNTEN_TAG_OPEN = '[';
-  private static readonly KUNTEN_TAG_CLOSE = ']';
-  private static readonly FURIGANA_TAG_OPEN = '(';
-  private static readonly FURIGANA_TAG_CLOSE = ')';
+  private static readonly KUNTEN_TAG_OPEN = "[";
+  private static readonly KUNTEN_TAG_CLOSE = "]";
+  private static readonly FURIGANA_TAG_OPEN = "(";
+  private static readonly FURIGANA_TAG_CLOSE = ")";
   // 複合文字タグ: ASCII apostrophe を使用（状態で開き/閉じを判定）
   private static readonly COMPOUND_CHARACTER_TAG = "'";
-  private static readonly JOJI_PREFIX = '~';
-  private static readonly OKIJI_PREFIX = '_';
-  private static readonly SAIDOKU_PREFIX = '*';
+  private static readonly JOJI_PREFIX = "~";
+  private static readonly OKIJI_PREFIX = "_";
+  private static readonly SAIDOKU_PREFIX = "*";
+  // 再読文字の1回目の読み記法
+  private static readonly SAIDOKU_READING_OPEN_1 = "<";
+  private static readonly SAIDOKU_READING_CLOSE_1 = ">";
+  private static readonly SAIDOKU_READING_OPEN_2 = "«";
+  private static readonly SAIDOKU_READING_CLOSE_2 = "»";
 
   parse(text: string): Word[][] {
     const context = new ParseContext();
@@ -33,8 +38,8 @@ export class PhesocaNotationParser {
 
     for (const char of text) {
       switch (char) {
-        case '\n':
-        case '\r':
+        case "\n":
+        case "\r":
           // 改行は無視
           break;
 
@@ -81,6 +86,16 @@ export class PhesocaNotationParser {
           context.treatAsSaidoku = true;
           break;
 
+        case PhesocaNotationParser.SAIDOKU_READING_OPEN_1:
+        case PhesocaNotationParser.SAIDOKU_READING_OPEN_2:
+          context.whileSaidokuReading = true;
+          break;
+
+        case PhesocaNotationParser.SAIDOKU_READING_CLOSE_1:
+        case PhesocaNotationParser.SAIDOKU_READING_CLOSE_2:
+          context.whileSaidokuReading = false;
+          break;
+
         default:
           this.handleCharacter(char, context, parsedWords);
       }
@@ -97,7 +112,7 @@ export class PhesocaNotationParser {
   private handleCharacter(
     char: string,
     context: ParseContext,
-    parsedWords: WordParameter[]
+    parsedWords: WordParameter[],
   ): void {
     if (context.whileCompoundCharacter) {
       context.currentWord.kanji.push(char);
@@ -105,6 +120,12 @@ export class PhesocaNotationParser {
       context.currentWord.furigana.push(char);
     } else if (context.whileKunten) {
       context.currentWord.kunten.push(char);
+    } else if (context.whileSaidokuReading) {
+      // 再読文字の1回目の読みを蓄積
+      if (!context.currentWord.saidokuReading) {
+        context.currentWord.saidokuReading = "";
+      }
+      context.currentWord.saidokuReading += char;
     } else if (isKatakana(char)) {
       context.currentWord.okurigana.push(char);
     } else {
@@ -131,21 +152,19 @@ export class PhesocaNotationParser {
 
   private buildSentence(parameters: WordParameter[]): Word[] {
     return parameters
-      .filter(param => param.kanji.length > 0)
-      .map(param => {
-        const kanjiStr = param.kanji.join('');
-        const kuntenStr = param.kunten.join('');
+      .filter((param) => param.kanji.length > 0)
+      .map((param) => {
+        const kanjiStr = param.kanji.join("");
+        const kuntenStr = param.kunten.join("");
         const kunten = kuntenStr ? kuntenFromString(kuntenStr) : undefined;
-        const okurigana = param.okurigana.length > 0
-          ? param.okurigana.join('')
-          : undefined;
-        const furigana = param.furigana.length > 0
-          ? param.furigana.join('')
-          : undefined;
+        const okurigana =
+          param.okurigana.length > 0 ? param.okurigana.join("") : undefined;
+        const furigana =
+          param.furigana.length > 0 ? param.furigana.join("") : undefined;
 
         // 複合文字の場合
         if (param.kanji.length > 1) {
-          const characters = param.kanji.map(k => new Character(k));
+          const characters = param.kanji.map((k) => new Character(k));
           return new CompoundCharacter(characters, kunten, okurigana, furigana);
         }
 
@@ -158,7 +177,7 @@ export class PhesocaNotationParser {
           param.isJoji,
           param.isOkiji,
           param.isSaidoku,
-          param.saidokuReading
+          param.saidokuReading,
         );
       });
   }
@@ -168,6 +187,7 @@ class ParseContext {
   whileKunten = false;
   whileFurigana = false;
   whileCompoundCharacter = false;
+  whileSaidokuReading = false;
   treatAsJoji = false;
   treatAsOkiji = false;
   treatAsSaidoku = false;
