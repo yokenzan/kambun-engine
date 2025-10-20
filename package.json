@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest --coverage",
+    "test:run": "vitest run",
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "docs": "typedoc"
