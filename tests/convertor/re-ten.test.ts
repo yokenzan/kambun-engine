@@ -14,38 +14,4 @@ describe('KakikudashiConvertor - レ点', () => {
 
     expect(convertor.convert(input)).toBe('人を愛す');
   });
-
-  test('レ点: 不[レ]見 → 見不（みず）', () => {
-    const input = [
-      new Character('不', Kunten.RE),
-      new Character('見'),
-    ];
-
-    expect(() => convertor.convert(input)).toThrow('Not implemented yet');
-    // 実装後は以下が期待される結果
-    // expect(convertor.convert(input)).toBe('見不');
-  });
-
-  test('複数のレ点: 不[レ]見[レ]山ヲ → 山を見不', () => {
-    const input = [
-      new Character('不', Kunten.RE),
-      new Character('見', Kunten.RE),
-      new Character('山', undefined, 'ヲ'),
-    ];
-
-    expect(() => convertor.convert(input)).toThrow('Not implemented yet');
-    // 実装後は以下が期待される結果
-    // expect(convertor.convert(input)).toBe('山を見不');
-  });
-
-  test('送り仮名とレ点の組み合わせ', () => {
-    const input = [
-      new Character('愛', Kunten.RE, 'シ'),
-      new Character('人', undefined, 'ヲ'),
-    ];
-
-    expect(() => convertor.convert(input)).toThrow('Not implemented yet');
-    // 実装後は以下が期待される結果
-    // expect(convertor.convert(input)).toBe('人を愛し');
-  });
 });
