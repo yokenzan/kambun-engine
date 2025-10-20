@@ -7,7 +7,7 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage run",
+    "test:coverage": "vitest run --coverage",
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "docs": "typedoc"
