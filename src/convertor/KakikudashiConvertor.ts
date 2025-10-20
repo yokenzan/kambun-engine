@@ -1,6 +1,6 @@
-import { Word } from '../domain/Word.js';
-import { ReadingOrderResolver } from './ReadingOrderResolver.js';
-import { TextGenerator } from './TextGenerator.js';
+import { Word } from "../domain/Word.js";
+import { ReadingOrderResolver } from "./ReadingOrderResolver.js";
+import { TextGenerator } from "./TextGenerator.js";
 
 /**
  * 漢文を書き下し文に変換
