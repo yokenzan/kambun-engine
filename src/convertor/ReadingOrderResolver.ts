@@ -119,20 +119,24 @@ export class ReadingOrderResolver {
       adj[endPoints[i + 1]].add(endPoints[i]);
     }
 
-    // 3. 読み順で最後の終点 → 終点より前の文字（終点と起点以外、句読点を越えない）
-    // 例: 山[三] → 登（ただし句読点で区切られた同じスコープ内のみ）
+    // 3. 読み順で最後の終点 → 終点より前で句読点に遮断されない文字
+    // 例: 登山[二]水[一] → 山[二] → 登（句読点なし、依存あり）
+    // 例: 其ノ初メ，...起[二]...中[一] → 起[二]から後方探索、句読点「，」で停止、依存なし
     const lastEndPointInReadingOrder = endPoints[0]; // index が最小 = 読み順で最後
 
-    // 終点から逆順に探索し、句読点で打ち切る
+    // 終点から後方（インデックスの小さい方向）に探索し、句読点で停止
     for (let i = lastEndPointInReadingOrder - 1; i >= 0; i--) {
-      // 句読点が見つかったら打ち切り（スコープを越えない）
+      // 句読点が見つかったら探索を停止（句を越えない）
       const word = words[i];
       if (word instanceof Character && this.isPunctuation(word)) {
         break;
       }
 
-      // 起点でも終点でもない文字を最後の終点の後に読む
-      if (i !== startIndex && !endPoints.includes(i)) {
+      // 起点より後ろならスキップ（すでに依存関係で処理済み）
+      if (i >= startIndex) continue;
+
+      // 終点でない文字を最後の終点の後に読む
+      if (!endPoints.includes(i)) {
         adj[lastEndPointInReadingOrder].add(i);
       }
     }
@@ -181,15 +185,18 @@ export class ReadingOrderResolver {
         const lastEndPointInReadingOrder = endPointsAll[0];
         adj[lastEndPointInReadingOrder].add(currentIndex);
 
-        // 最後の終点 → 終点より前の文字（起点と終点以外、句読点を越えない）
+        // 終点から後方に探索し、句読点で停止
         for (let i = lastEndPointInReadingOrder - 1; i >= 0; i--) {
-          // 句読点が見つかったら打ち切り
+          // 句読点が見つかったら探索を停止
           const word = words[i];
           if (word instanceof Character && this.isPunctuation(word)) {
             break;
           }
 
-          if (i !== currentIndex && !endPointsAll.includes(i)) {
+          // 起点より後ろならスキップ
+          if (i >= currentIndex) continue;
+
+          if (!endPointsAll.includes(i)) {
             adj[lastEndPointInReadingOrder].add(i);
           }
         }
