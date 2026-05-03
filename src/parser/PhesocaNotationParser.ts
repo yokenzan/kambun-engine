@@ -21,6 +21,11 @@ export class PhesocaNotationParser {
   private static readonly KUNTEN_TAG_CLOSE = ']';
   private static readonly FURIGANA_TAG_OPEN = '(';
   private static readonly FURIGANA_TAG_CLOSE = ')';
+  // 再読1回目の読み（角括弧/ギュメ）
+  private static readonly SAIDOKU_READING_OPEN_ANGLE = '<';
+  private static readonly SAIDOKU_READING_CLOSE_ANGLE = '>';
+  private static readonly SAIDOKU_READING_OPEN_GUILLEMET = '«';
+  private static readonly SAIDOKU_READING_CLOSE_GUILLEMET = '»';
   // 複合文字タグ: ASCII apostrophe を使用（状態で開き/閉じを判定）
   private static readonly COMPOUND_CHARACTER_TAG = "'";
   private static readonly JOJI_PREFIX = '~';
@@ -69,6 +74,18 @@ export class PhesocaNotationParser {
           context.whileKunten = false;
           break;
 
+        // 再読1回目の読み（<…> / «…»）の開始
+        case PhesocaNotationParser.SAIDOKU_READING_OPEN_ANGLE:
+        case PhesocaNotationParser.SAIDOKU_READING_OPEN_GUILLEMET:
+          context.whileSaidokuReading = true;
+          break;
+
+        // 再読1回目の読み（<…> / «…»）の終了
+        case PhesocaNotationParser.SAIDOKU_READING_CLOSE_ANGLE:
+        case PhesocaNotationParser.SAIDOKU_READING_CLOSE_GUILLEMET:
+          context.whileSaidokuReading = false;
+          break;
+
         case PhesocaNotationParser.JOJI_PREFIX:
           context.treatAsJoji = true;
           break;
@@ -105,6 +122,9 @@ export class PhesocaNotationParser {
       context.currentWord.furigana.push(char);
     } else if (context.whileKunten) {
       context.currentWord.kunten.push(char);
+    } else if (context.whileSaidokuReading) {
+      // 再読1回目の読みを蓄積
+      context.currentWord.saidokuReading = (context.currentWord.saidokuReading ?? '') + char;
     } else if (isKatakana(char)) {
       context.currentWord.okurigana.push(char);
     } else {
@@ -168,6 +188,7 @@ class ParseContext {
   whileKunten = false;
   whileFurigana = false;
   whileCompoundCharacter = false;
+  whileSaidokuReading = false;
   treatAsJoji = false;
   treatAsOkiji = false;
   treatAsSaidoku = false;

@@ -70,11 +70,8 @@ export class TextGenerator {
   }
 
   private saidokuSecondReading(word: Character): string {
-    // 再読文字の2回目の読み（例：「未」→「いまだ」）
-    if (word.furigana) {
-      return toHiragana(word.furigana);
-    }
-
+    // 再読文字の2回目の読み（例：「未」→「いまだ」、「将」→「将に」）
+    // 漢字 + 送り仮名を出力
     return word.kanji + this.convertOkurigana(word.okurigana);
   }
 
