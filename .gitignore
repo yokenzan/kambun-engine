@@ -15,3 +15,6 @@ debug-*.ts
 scripts/worktree-manager.sh
 *-REQUIREMENTS.md
 WORKTREE-SETUP.md
+
+/.mcp.json
+/.serena
