@@ -15,7 +15,6 @@ describe('Saidoku Integration Tests', () => {
     const words = parser.parse(input)[0];
     const result = convertor.convert(words);
 
-    // 期待される出力: 「将に来たらむとす。」
     expect(result).toBe('将に来たらむとす。');
   });
 
@@ -24,7 +23,6 @@ describe('Saidoku Integration Tests', () => {
     const words = parser.parse(input)[0];
     const result = convertor.convert(words);
 
-    // 期待される出力: 「盍ぞ各〻爾の志を言はざる。」
     expect(result).toBe('盍ぞ各〻爾の志を言はざる。');
   });
 
@@ -33,7 +31,6 @@ describe('Saidoku Integration Tests', () => {
     const words = parser.parse(input)[0];
     const result = convertor.convert(words);
 
-    // 期待される出力: 「将に行かんとす。」
     expect(result).toBe('将に行かんとす。');
   });
 
@@ -43,7 +40,7 @@ describe('Saidoku Integration Tests', () => {
 
     // パース結果の検証
     expect(words).toHaveLength(3);
-    
+
     // 再読文字「将」の検証
     const saidokuWord = words[0];
     expect(saidokuWord.kanji).toBe('将');
@@ -69,7 +66,7 @@ describe('Saidoku Integration Tests', () => {
 
     // パース結果の検証
     expect(words).toHaveLength(7);
-    
+
     // 再読文字「盍」の検証
     const saidokuWord = words[0];
     expect(saidokuWord.kanji).toBe('盍');
