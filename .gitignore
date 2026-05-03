@@ -7,3 +7,14 @@ docs/
 .env
 .vscode/
 .idea/
+
+# Debug files
+debug-*.js
+debug-*.ts
+.cursor/
+scripts/worktree-manager.sh
+*-REQUIREMENTS.md
+WORKTREE-SETUP.md
+
+/.mcp.json
+/.serena

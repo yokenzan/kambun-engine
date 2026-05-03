@@ -64,31 +64,19 @@ export class TextGenerator {
 
   private saidokuFirstReading(word: Character): string {
     // 再読文字の1回目の読み（例：「未」→「ず」）
-    let result = '';
     if (word.saidokuReading) {
-      result = toHiragana(word.saidokuReading);
+      return toHiragana(word.saidokuReading);
     } else if (word.furigana) {
-      result = toHiragana(word.furigana) + this.convertOkurigana(word.okurigana);
+      return toHiragana(word.furigana) + this.convertOkurigana(word.okurigana);
     }
 
-    // 割注がある場合は追加
-    if (word.warichu !== undefined) {
-      result += `（${word.warichu}）`;
-    }
-
-    return result;
+    return '';
   }
 
   private saidokuSecondReading(word: Character): string {
-    // 再読文字の2回目の読み（例：「未」→「いまだ」）
-    let result = '';
-    if (word.furigana) {
-      result = toHiragana(word.furigana);
-    } else {
-      result = word.kanji + this.convertOkurigana(word.okurigana);
-    }
+    // 再読文字の2回目の読み（例：「未」→「いまだ」、「将」→「将に」）
+    let result = word.kanji + this.convertOkurigana(word.okurigana);
 
-    // 割注がある場合は追加（2回目のみ）
     if (word.warichu !== undefined) {
       result += `（${word.warichu}）`;
     }

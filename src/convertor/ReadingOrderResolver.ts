@@ -229,21 +229,23 @@ export class ReadingOrderResolver {
     readingOrder: number[]
   ): ReadingUnit[] {
     const units: ReadingUnit[] = [];
+    const saidokuFirstReadings: ReadingUnit[] = [];
+    const saidokuSecondReadings: ReadingUnit[] = [];
 
     for (const index of readingOrder) {
       const word = words[index];
 
       // 再読文字の場合
       if (word instanceof Character && word.isSaidoku) {
-        // 1回目の読み
-        units.push({
-          index,
-          phase: ReadingPhase.SAIDOKU_FIRST,
-        });
-        // 2回目の読み（後で追加される）
-        units.push({
+        // 2回目の読みは後でスコープ先頭に配置するため保持
+        saidokuSecondReadings.push({
           index,
           phase: ReadingPhase.SAIDOKU_SECOND,
+        });
+        // 1回目の読みは後で句点前に配置するため保持
+        saidokuFirstReadings.push({
+          index,
+          phase: ReadingPhase.SAIDOKU_FIRST,
         });
       } else {
         // 通常の読み
@@ -251,6 +253,26 @@ export class ReadingOrderResolver {
           index,
           phase: ReadingPhase.NORMAL,
         });
+      }
+    }
+
+    // 再読文字がある場合のみ特別な処理を適用
+    if (saidokuSecondReadings.length > 0) {
+      // 再読文字の2回目の読みをスコープの先頭に挿入
+      units.unshift(...saidokuSecondReadings);
+
+      // 句点の前に再読1回目の読みを挿入
+      const kutenIndex = units.findIndex((unit) => {
+        const word = words[unit.index];
+        return word instanceof Character && word.kanji === '。';
+      });
+
+      if (kutenIndex !== -1) {
+        // 句点の前に挿入
+        units.splice(kutenIndex, 0, ...saidokuFirstReadings);
+      } else {
+        // 句点がない場合は末尾に追加
+        units.push(...saidokuFirstReadings);
       }
     }
 

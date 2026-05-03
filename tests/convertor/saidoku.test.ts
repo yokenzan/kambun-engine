@@ -1,13 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { Character } from '../../src/domain/Character.js';
 import { Kunten } from '../../src/domain/Kunten.js';
-
-// まだ実装されていないクラスのモック
-class KakikudashiConvertor {
-  convert(words: Character[]): string {
-    throw new Error('Not implemented yet');
-  }
-}
+import { KakikudashiConvertor } from '../../src/convertor/KakikudashiConvertor.js';
 
 describe('KakikudashiConvertor - 再読文字', () => {
   const convertor = new KakikudashiConvertor();
@@ -27,9 +21,7 @@ describe('KakikudashiConvertor - 再読文字', () => {
       new Character('見', Kunten.RE),
     ];
 
-    expect(() => convertor.convert(input)).toThrow('Not implemented yet');
-    // 実装後は以下が期待される結果
-    // expect(convertor.convert(input)).toBe('いまだ見ず');
+    expect(convertor.convert(input)).toBe('未だ見ず');
   });
 
   test('将（まさに）: *将(まさ)ニ[レ]来ラントス → まさに来らんとす', () => {
@@ -47,9 +39,7 @@ describe('KakikudashiConvertor - 再読文字', () => {
       new Character('来', Kunten.RE, 'ラ'),
     ];
 
-    expect(() => convertor.convert(input)).toThrow('Not implemented yet');
-    // 実装後は以下が期待される結果
-    // expect(convertor.convert(input)).toBe('まさに来らんとす');
+    expect(convertor.convert(input)).toBe('将に来らんとす');
   });
 
   test('宜（よろしく）: *宜(よろ)シク[レ]弁ズベシ → よろしく弁ずべし', () => {
@@ -67,8 +57,6 @@ describe('KakikudashiConvertor - 再読文字', () => {
       new Character('弁', Kunten.RE, 'ズ'),
     ];
 
-    expect(() => convertor.convert(input)).toThrow('Not implemented yet');
-    // 実装後は以下が期待される結果
-    // expect(convertor.convert(input)).toBe('よろしく弁ずべし');
+    expect(convertor.convert(input)).toBe('宜しく弁ずべし');
   });
 });
