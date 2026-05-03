@@ -34,6 +34,14 @@ describe('Saidoku Integration Tests', () => {
     expect(result).toBe('将に行かんとす。');
   });
 
+  test('再読文字と割注: *未(いま)ダ<ズ>{まだ...ない}[レ]知ラ。', () => {
+    const input = '*未(いま)ダ<ズ>{まだ...ない}[レ]知ラ。';
+    const words = parser.parse(input)[0];
+    const result = convertor.convert(words);
+
+    expect(result).toBe('未だ（まだ...ない）知らず。');
+  });
+
   test('再読文字のパース検証: *将(まさ)ニ<ス>[レ]来タラムト。', () => {
     const input = '*将(まさ)ニ<ス>[レ]来タラムト。';
     const words = parser.parse(input)[0];

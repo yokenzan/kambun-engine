@@ -15,9 +15,9 @@ export class TextGenerator {
   }
 
   private wordToString(word: Word, phase: ReadingPhase): string {
-    // 置き字はスキップ
+    // 置き字はスキップ（ただし割注がある場合は表示）
     if (word instanceof Character && word.isOkiji) {
-      return '';
+      return word.warichu !== undefined ? `（${word.warichu}）` : '';
     }
 
     // 再読文字の処理
@@ -36,33 +36,37 @@ export class TextGenerator {
   }
 
   private normalReading(word: Word): string {
+    let result = '';
+    
     if (word instanceof CompoundCharacter) {
-      return word.kanji + this.convertOkurigana(word.okurigana);
-    }
-
-    if (word instanceof Character) {
+      result = word.kanji + this.convertOkurigana(word.okurigana);
+    } else if (word instanceof Character) {
       // 助字・助動詞は振り仮名で読む
       if (word.isJojiOrJodoushi) {
         const reading = word.furigana ? toHiragana(word.furigana) : word.kanji;
         const okurigana = this.convertOkurigana(word.okurigana);
-        return reading + okurigana;
+        result = reading + okurigana;
+      } else {
+        // 通常の文字
+        result = word.kanji + this.convertOkurigana(word.okurigana);
       }
-
-      // 通常の文字
-      return word.kanji + this.convertOkurigana(word.okurigana);
+    } else {
+      result = word.kanji;
     }
 
-    return word.kanji;
+    // 割注がある場合は追加（空文字列も含む）
+    if (word.warichu !== undefined) {
+      result += `（${word.warichu}）`;
+    }
+
+    return result;
   }
 
   private saidokuFirstReading(word: Character): string {
     // 再読文字の1回目の読み（例：「未」→「ず」）
     if (word.saidokuReading) {
       return toHiragana(word.saidokuReading);
-    }
-
-    // saidokuReadingがない場合は振り仮名を使用
-    if (word.furigana) {
+    } else if (word.furigana) {
       return toHiragana(word.furigana) + this.convertOkurigana(word.okurigana);
     }
 
@@ -71,8 +75,13 @@ export class TextGenerator {
 
   private saidokuSecondReading(word: Character): string {
     // 再読文字の2回目の読み（例：「未」→「いまだ」、「将」→「将に」）
-    // 漢字 + 送り仮名を出力
-    return word.kanji + this.convertOkurigana(word.okurigana);
+    let result = word.kanji + this.convertOkurigana(word.okurigana);
+
+    if (word.warichu !== undefined) {
+      result += `（${word.warichu}）`;
+    }
+
+    return result;
   }
 
   private convertOkurigana(okurigana?: string): string {

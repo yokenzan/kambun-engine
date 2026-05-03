@@ -15,4 +15,6 @@ export interface Word {
   readonly furigana?: string;
   /** 送り仮名 */
   readonly okurigana?: string;
+  /** 割注（注釈・補足説明） */
+  readonly warichu?: string;
 }
